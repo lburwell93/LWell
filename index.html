@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Football Pick Tracker</title>
+  <style>
+    /* Basic reset and typography */
+    :root {
+      --bg: #0f172a;
+      --surface: #111827;
+      --card: #1f2937;
+      --muted: #6b7280;
+      --accent: #38bdf8;
+      --accent-2: #a78bfa;
+      --text: #e5e7eb;
+      --border: #243043;
+      --success: #22c55e;
+      --danger: #f43f5e;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.08), transparent 35%),
+        radial-gradient(circle at 80% 0%, rgba(167, 139, 250, 0.08), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+    }
+
+    p {
+      margin: 8px 0;
+      color: var(--muted);
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto 48px;
+    }
+
+    .panel {
+      background: linear-gradient(145deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(5px);
+    }
+
+    .panel + .panel {
+      margin-top: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      background: rgba(56, 189, 248, 0.12);
+      color: #67e8f9;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    label {
+      font-size: 13px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input, select, button {
+      font: inherit;
+    }
+
+    .input, .select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    .input:focus, .select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    .btn {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: linear-gradient(135deg, var(--accent), #06b6d4);
+      color: #081016;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.12s ease, box-shadow 0.2s;
+      box-shadow: 0 10px 25px rgba(6, 182, 212, 0.25);
+    }
+
+    .btn.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border-color: var(--border);
+      box-shadow: none;
+    }
+
+    .btn.danger {
+      background: linear-gradient(135deg, #f43f5e, #ef4444);
+      color: #fff;
+      box-shadow: 0 10px 25px rgba(244, 63, 94, 0.25);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .filter-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .game-list {
+      margin-top: 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .game-card {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .game-header {
+      padding: 14px 18px;
+      background: linear-gradient(120deg, rgba(56, 189, 248, 0.08), rgba(167, 139, 250, 0.08));
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .game-title {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .game-title h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.01em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .summary {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill strong {
+      color: #fff;
+    }
+
+    .edge {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.5);
+      color: #a7f3d0;
+    }
+
+    .edge.away {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.5);
+      color: #fecdd3;
+    }
+
+    .game-body {
+      padding: 16px 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .resource-grid {
+      display: grid;
+      grid-template-columns: 1.4fr repeat(4, 0.8fr) 1fr 120px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .resource-grid.header {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .resource-row {
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .resource-controls {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+
+    .icon-btn {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 8px;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.1s ease, background 0.2s;
+    }
+
+    .icon-btn:hover {
+      background: rgba(56, 189, 248, 0.12);
+      transform: translateY(-1px);
+    }
+
+    details summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .divider {
+      border: 0;
+      border-top: 1px solid var(--border);
+      margin: 10px 0;
+    }
+
+    .help {
+      margin-top: 30px;
+      border: 1px dashed var(--border);
+      padding: 16px 18px;
+      border-radius: 12px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    @media (max-width: 900px) {
+      .resource-grid {
+        grid-template-columns: 1.2fr repeat(3, 1fr);
+        grid-auto-rows: minmax(40px, auto);
+      }
+
+      .resource-grid > *:nth-child(n+5) {
+        grid-column: span 3;
+      }
+
+      .resource-controls {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="panel">
+      <h1>Football Pick Tracker</h1>
+      <p>Track and visualize how experts pick NCAA and NFL games. Add games, log predictions, and see who has the edge at a glance.</p>
+      <div class="chips">
+        <span class="chip">Live summaries</span>
+        <span class="chip">Editable resources</span>
+        <span class="chip">Win picks &amp; margins</span>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="section-title">Filters</div>
+      <div class="filter-bar">
+        <div>
+          <label for="leagueFilter">League</label>
+          <select id="leagueFilter" class="select">
+            <option value="all">All</option>
+            <option value="NCAA">NCAA</option>
+            <option value="NFL">NFL</option>
+          </select>
+        </div>
+        <div>
+          <label for="weekFilter">Week / Label</label>
+          <select id="weekFilter" class="select">
+            <option value="all">All Weeks</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">Add a Game</div>
+      <div class="controls">
+        <div>
+          <label for="leagueInput">League</label>
+          <select id="leagueInput" class="select">
+            <option value="NCAA">NCAA</option>
+            <option value="NFL">NFL</option>
+          </select>
+        </div>
+        <div>
+          <label for="weekInput">Week / Label</label>
+          <input id="weekInput" class="input" placeholder="e.g., Week 5, Bowl Games" />
+        </div>
+        <div>
+          <label for="dateInput">Date</label>
+          <input id="dateInput" class="input" type="date" />
+        </div>
+        <div>
+          <label for="homeInput">Home Team</label>
+          <input id="homeInput" class="input" placeholder="Home team" />
+        </div>
+        <div>
+          <label for="awayInput">Away Team</label>
+          <input id="awayInput" class="input" placeholder="Away team" />
+        </div>
+        <div>
+          <label for="spreadInput">Spread (home -)</label>
+          <input id="spreadInput" class="input" type="number" step="0.5" placeholder="-3.5" />
+        </div>
+      </div>
+      <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+        <button id="addGameBtn" class="btn">Add Game</button>
+      </div>
+    </section>
+
+    <section class="game-list" id="gameList"></section>
+
+    <section class="help">
+      <h3 style="margin-top:0;">How to use</h3>
+      <ul>
+        <li>Add games with league, week, teams, and spread. Each game starts with your default resources.</li>
+        <li>Edit any resource row: choose winner, enter win probabilities, margin (+ for home, - for away), and spread pick.</li>
+        <li>Reorder or remove resources per game, or add new ones with the "Add Resource" button.</li>
+        <li>Summaries update instantly: pick counts, average margin, and spread cover tallies highlight who has the edge.</li>
+        <li>Use filters at the top to focus on a league or specific week/label.</li>
+      </ul>
+    </section>
+  </div>
+
+  <script>
+    // Default expert/resource list. New games clone this list automatically.
+    const defaultResources = [
+      "ESPN FPI",
+      "SP+",
+      "PFF",
+      "Action Network",
+      "Betting Model A",
+      "Sharp Bettor 1"
+    ];
+
+    // State: list of all games and incremental IDs to keep element hooks stable.
+    let games = [];
+    let gameIdCounter = 1;
+
+    // Cached DOM references for efficiency.
+    const leagueFilter = document.getElementById("leagueFilter");
+    const weekFilter = document.getElementById("weekFilter");
+    const gameList = document.getElementById("gameList");
+    const addGameBtn = document.getElementById("addGameBtn");
+
+    // Form inputs
+    const leagueInput = document.getElementById("leagueInput");
+    const weekInput = document.getElementById("weekInput");
+    const dateInput = document.getElementById("dateInput");
+    const homeInput = document.getElementById("homeInput");
+    const awayInput = document.getElementById("awayInput");
+    const spreadInput = document.getElementById("spreadInput");
+
+    // Helper: create a fresh resource row object.
+    function buildResource(name = "") {
+      return {
+        name,
+        winnerPick: "none", // "home", "away", "none"
+        homeWinPct: "",
+        awayWinPct: "",
+        margin: "", // positive favors home, negative favors away
+        coverPick: "none" // "home", "away", "none"
+      };
+    }
+
+    // Build a new game object and push to state.
+    function addGame() {
+      const league = leagueInput.value.trim();
+      const week = weekInput.value.trim() || "Week";
+      const date = dateInput.value;
+      const home = homeInput.value.trim();
+      const away = awayInput.value.trim();
+      const spread = spreadInput.value;
+
+      if (!home || !away) {
+        alert("Please enter both home and away teams.");
+        return;
+      }
+
+      const game = {
+        id: gameIdCounter++,
+        league,
+        week,
+        date,
+        home,
+        away,
+        spread,
+        resources: defaultResources.map(r => buildResource(r))
+      };
+
+      games.unshift(game);
+      renderWeekFilter();
+      renderGames();
+      clearForm();
+    }
+
+    function clearForm() {
+      weekInput.value = "";
+      dateInput.value = "";
+      homeInput.value = "";
+      awayInput.value = "";
+      spreadInput.value = "";
+    }
+
+    // Compute summary stats for a game.
+    function computeSummary(game) {
+      let homePicks = 0;
+      let awayPicks = 0;
+      let homeCover = 0;
+      let awayCover = 0;
+      let margins = [];
+
+      game.resources.forEach(res => {
+        if (res.winnerPick === "home") homePicks++;
+        if (res.winnerPick === "away") awayPicks++;
+        if (res.coverPick === "home") homeCover++;
+        if (res.coverPick === "away") awayCover++;
+        const marginVal = parseFloat(res.margin);
+        if (!isNaN(marginVal)) margins.push(marginVal);
+      });
+
+      const avgMargin = margins.length
+        ? margins.reduce((a, b) => a + b, 0) / margins.length
+        : 0;
+
+      return { homePicks, awayPicks, homeCover, awayCover, avgMargin, marginCount: margins.length };
+    }
+
+    // Render all games according to active filters.
+    function renderGames() {
+      const selectedLeague = leagueFilter.value;
+      const selectedWeek = weekFilter.value;
+
+      gameList.innerHTML = "";
+
+      const filtered = games.filter(g => {
+        const leagueMatch = selectedLeague === "all" || g.league === selectedLeague;
+        const weekMatch = selectedWeek === "all" || g.week === selectedWeek;
+        return leagueMatch && weekMatch;
+      });
+
+      if (!filtered.length) {
+        const empty = document.createElement("div");
+        empty.className = "panel";
+        empty.textContent = "No games yet. Add one above to get started.";
+        gameList.appendChild(empty);
+        return;
+      }
+
+      filtered.forEach(game => {
+        const card = document.createElement("article");
+        card.className = "game-card";
+
+        const header = document.createElement("div");
+        header.className = "game-header";
+
+        const title = document.createElement("div");
+        title.className = "game-title";
+        title.innerHTML = `
+          <h3>${game.away} @ ${game.home}</h3>
+          <span class="subtitle">${game.league} • ${game.week}${game.date ? " • " + game.date : ""}${game.spread ? " • Spread: " + game.spread : ""}</span>
+        `;
+
+        const summary = document.createElement("div");
+        summary.className = "summary";
+
+        header.appendChild(title);
+        header.appendChild(summary);
+
+        const body = document.createElement("div");
+        body.className = "game-body";
+
+        const toggle = document.createElement("details");
+        toggle.open = true;
+
+        const summaryToggle = document.createElement("summary");
+        summaryToggle.textContent = "Show/Hide Details";
+        toggle.appendChild(summaryToggle);
+
+        const tableHeader = document.createElement("div");
+        tableHeader.className = "resource-grid header";
+        tableHeader.innerHTML = `
+          <div>Resource</div>
+          <div>Winner Pick</div>
+          <div>Home Win %</div>
+          <div>Away Win %</div>
+          <div>Margin (+Home / -Away)</div>
+          <div>Covers Spread</div>
+          <div>Order</div>
+        `;
+
+        toggle.appendChild(tableHeader);
+
+        const resourceContainer = document.createElement("div");
+        resourceContainer.className = "resource-container";
+
+        game.resources.forEach((res, idx) => {
+          resourceContainer.appendChild(buildResourceRow(game, res, idx));
+        });
+
+        const addRowBtn = document.createElement("button");
+        addRowBtn.className = "btn secondary";
+        addRowBtn.textContent = "Add Resource";
+        addRowBtn.style.marginTop = "10px";
+        addRowBtn.onclick = () => {
+          game.resources.push(buildResource(""));
+          renderGames();
+        };
+
+        toggle.appendChild(resourceContainer);
+        toggle.appendChild(addRowBtn);
+
+        const footerActions = document.createElement("div");
+        footerActions.style.display = "flex";
+        footerActions.style.justifyContent = "space-between";
+        footerActions.style.alignItems = "center";
+        footerActions.style.gap = "10px";
+        footerActions.style.marginTop = "10px";
+
+        const info = document.createElement("div");
+        info.style.color = "var(--muted)";
+        info.style.fontSize = "13px";
+        info.textContent = "Edit picks below. Summaries update automatically.";
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "btn danger";
+        deleteBtn.textContent = "Delete Game";
+        deleteBtn.onclick = () => {
+          games = games.filter(g => g.id !== game.id);
+          renderWeekFilter();
+          renderGames();
+        };
+
+        footerActions.appendChild(info);
+        footerActions.appendChild(deleteBtn);
+
+        body.appendChild(toggle);
+        body.appendChild(new Divider());
+        body.appendChild(footerActions);
+
+        card.appendChild(header);
+        card.appendChild(body);
+        gameList.appendChild(card);
+
+        updateSummaryDisplay(game, summary);
+      });
+    }
+
+    // Simple horizontal divider element creator.
+    function Divider() {
+      const hr = document.createElement("hr");
+      hr.className = "divider";
+      return hr;
+    }
+
+    // Build an individual resource row element with event handlers.
+    function buildResourceRow(game, res, index) {
+      const row = document.createElement("div");
+      row.className = "resource-grid resource-row";
+
+      // Resource name input
+      const nameInput = document.createElement("input");
+      nameInput.className = "input";
+      nameInput.value = res.name;
+      nameInput.placeholder = "Resource / Expert name";
+      nameInput.oninput = e => {
+        res.name = e.target.value;
+      };
+
+      // Winner pick select
+      const winnerSelect = document.createElement("select");
+      winnerSelect.className = "select";
+      winnerSelect.innerHTML = `
+        <option value="none">No Pick</option>
+        <option value="home">${game.home}</option>
+        <option value="away">${game.away}</option>
+      `;
+      winnerSelect.value = res.winnerPick;
+      winnerSelect.onchange = e => {
+        res.winnerPick = e.target.value;
+        renderGames();
+      };
+
+      // Home win %
+      const homePct = document.createElement("input");
+      homePct.type = "number";
+      homePct.className = "input";
+      homePct.placeholder = "%";
+      homePct.value = res.homeWinPct;
+      homePct.oninput = e => {
+        res.homeWinPct = e.target.value;
+      };
+
+      // Away win %
+      const awayPct = document.createElement("input");
+      awayPct.type = "number";
+      awayPct.className = "input";
+      awayPct.placeholder = "%";
+      awayPct.value = res.awayWinPct;
+      awayPct.oninput = e => {
+        res.awayWinPct = e.target.value;
+      };
+
+      // Margin input
+      const marginInput = document.createElement("input");
+      marginInput.type = "number";
+      marginInput.className = "input";
+      marginInput.placeholder = "+7 = home by 7, -3 = away by 3";
+      marginInput.value = res.margin;
+      marginInput.oninput = e => {
+        res.margin = e.target.value;
+        updateSummaryAfterChange(game);
+      };
+
+      // Cover select
+      const coverSelect = document.createElement("select");
+      coverSelect.className = "select";
+      coverSelect.innerHTML = `
+        <option value="none">No Pick / N/A</option>
+        <option value="home">${game.home}</option>
+        <option value="away">${game.away}</option>
+      `;
+      coverSelect.value = res.coverPick;
+      coverSelect.onchange = e => {
+        res.coverPick = e.target.value;
+        renderGames();
+      };
+
+      // Controls for ordering/deleting
+      const controls = document.createElement("div");
+      controls.className = "resource-controls";
+
+      const upBtn = document.createElement("button");
+      upBtn.className = "icon-btn";
+      upBtn.textContent = "↑";
+      upBtn.title = "Move up";
+      upBtn.onclick = () => {
+        if (index === 0) return;
+        const tmp = game.resources[index - 1];
+        game.resources[index - 1] = game.resources[index];
+        game.resources[index] = tmp;
+        renderGames();
+      };
+
+      const downBtn = document.createElement("button");
+      downBtn.className = "icon-btn";
+      downBtn.textContent = "↓";
+      downBtn.title = "Move down";
+      downBtn.onclick = () => {
+        if (index === game.resources.length - 1) return;
+        const tmp = game.resources[index + 1];
+        game.resources[index + 1] = game.resources[index];
+        game.resources[index] = tmp;
+        renderGames();
+      };
+
+      const delBtn = document.createElement("button");
+      delBtn.className = "icon-btn";
+      delBtn.textContent = "✕";
+      delBtn.title = "Delete resource";
+      delBtn.onclick = () => {
+        game.resources.splice(index, 1);
+        renderGames();
+      };
+
+      controls.append(upBtn, downBtn, delBtn);
+
+      row.append(
+        nameInput,
+        winnerSelect,
+        homePct,
+        awayPct,
+        marginInput,
+        coverSelect,
+        controls
+      );
+
+      return row;
+    }
+
+    // Update summary display for a specific game header.
+    function updateSummaryDisplay(game, container) {
+      const { homePicks, awayPicks, homeCover, awayCover, avgMargin, marginCount } = computeSummary(game);
+      container.innerHTML = "";
+
+      const pickPill = document.createElement("div");
+      pickPill.className = "pill";
+      let edgeClass = "";
+      if (homePicks > awayPicks) edgeClass = "edge";
+      if (awayPicks > homePicks) edgeClass = "edge away";
+      pickPill.classList.add(edgeClass);
+      pickPill.innerHTML = `<strong>Win Picks:</strong> ${game.home}: ${homePicks} | ${game.away}: ${awayPicks}`;
+
+      const marginPill = document.createElement("div");
+      marginPill.className = "pill";
+      const marginText = marginCount
+        ? avgMargin > 0
+          ? `${game.home} by ${avgMargin.toFixed(1)}`
+          : avgMargin < 0
+          ? `${game.away} by ${Math.abs(avgMargin).toFixed(1)}`
+          : "Even"
+        : "No margins yet";
+      marginPill.innerHTML = `<strong>Average Margin:</strong> ${marginText}`;
+
+      const coverPill = document.createElement("div");
+      coverPill.className = "pill";
+      coverPill.innerHTML = `<strong>Spread Picks:</strong> ${game.home}: ${homeCover} | ${game.away}: ${awayCover}`;
+
+      container.append(pickPill, marginPill, coverPill);
+    }
+
+    // After an input change, re-render summaries without reloading everything.
+    function updateSummaryAfterChange(game) {
+      // Re-render entire list to keep UI consistent and recalc summaries.
+      renderGames();
+    }
+
+    // Build week filter options based on games present.
+    function renderWeekFilter() {
+      const existing = new Set(games.map(g => g.week));
+      const currentValue = weekFilter.value;
+      weekFilter.innerHTML = '<option value="all">All Weeks</option>';
+      existing.forEach(week => {
+        const opt = document.createElement("option");
+        opt.value = week;
+        opt.textContent = week;
+        weekFilter.appendChild(opt);
+      });
+      // Keep previous selection if still valid
+      if ([...existing].includes(currentValue)) {
+        weekFilter.value = currentValue;
+      }
+    }
+
+    // Event listeners
+    addGameBtn.addEventListener("click", addGame);
+    leagueFilter.addEventListener("change", renderGames);
+    weekFilter.addEventListener("change", renderGames);
+
+    // Seed with an example game for convenience.
+    games.push({
+      id: gameIdCounter++,
+      league: "NCAA",
+      week: "Week 1",
+      date: "",
+      home: "Notre Dame",
+      away: "Texas",
+      spread: "-4.5",
+      resources: defaultResources.map(r => buildResource(r))
+    });
+
+    renderWeekFilter();
+    renderGames();
+  </script>
+</body>
+</html>
